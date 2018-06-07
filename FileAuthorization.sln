@@ -7,6 +7,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{166EA354-062
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FileAuthorization", "src\FileAuthorization\FileAuthorization.csproj", "{F40C60FD-A5AC-49FD-9EC9-6564BBA5B6AF}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FileAuthorization.Abstractions", "src\FileAuthorization.Abstractions\FileAuthorization.Abstractions.csproj", "{B931E140-2F69-4441-8FD1-B0F71C3B3FB6}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -17,12 +19,17 @@ Global
 		{F40C60FD-A5AC-49FD-9EC9-6564BBA5B6AF}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F40C60FD-A5AC-49FD-9EC9-6564BBA5B6AF}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F40C60FD-A5AC-49FD-9EC9-6564BBA5B6AF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B931E140-2F69-4441-8FD1-B0F71C3B3FB6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B931E140-2F69-4441-8FD1-B0F71C3B3FB6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B931E140-2F69-4441-8FD1-B0F71C3B3FB6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B931E140-2F69-4441-8FD1-B0F71C3B3FB6}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{F40C60FD-A5AC-49FD-9EC9-6564BBA5B6AF} = {166EA354-062D-43A4-941A-51CBF9E71B03}
+		{B931E140-2F69-4441-8FD1-B0F71C3B3FB6} = {166EA354-062D-43A4-941A-51CBF9E71B03}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {7B1420F2-09FC-4C40-A44E-DFB22493594F}
