@@ -1,43 +1,62 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using FileAuthorization.Abstractions;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.Extensions;
+using Microsoft.AspNetCore.Http.Features;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Myrmec;
 using System;
+using System.Globalization;
+using System.IO;
+using System.Net.Http.Headers;
+using System.Threading;
 using System.Threading.Tasks;
-using FileAuthorization.Abstractions;
 
 namespace FileAuthorization
 {
     public class FileAuthenticationMiddleware
     {
         private readonly RequestDelegate _next;
-        private readonly string _pathBase;
-        public FileAuthenticationMiddleware(RequestDelegate next)
+        private readonly ILogger<FileAuthenticationMiddleware> _logger;
+
+        public FileAuthenticationMiddleware(RequestDelegate next, IFileAuthorizationService service, ILogger<FileAuthenticationMiddleware> logger)
         {
             _next = next ?? throw new ArgumentNullException(nameof(next));
+            Service = service;
+            _logger = logger;
         }
+
+        public IFileAuthorizationService Service { get; }
+        public int BufferSize = 64 * 1024;
 
         public async Task Invoke(HttpContext context)
         {
-            var path = context.Request.Path.Value;
-            var scheme = GetScheme(path);
+            var path = context.Request.Path.Value.Remove(0, 1);
 
             if (!BelongToMe(path))
             {
                 await _next.Invoke(context);
                 return;
             }
-            var handlers = context.RequestServices.GetRequiredService<IFileAuthenticationHandlerProvider>();
-            var handler = await handlers.GetHandlerAsync(context, scheme);
 
-            if (handler == null)
+            var handlerScheme = GetHandlerScheme(path);
+
+
+            var handlerType = await Service.Provider.GetHandlerAsync(context, handlerScheme);
+
+            if (!Service.Provider.Exist(handlerScheme))
             {
                 return;
             }
 
-            var requestFilePath = GetRequestFilePath(path, scheme);
-            var result = await handler.AuthenticateAsync(context, requestFilePath);
 
+            if (!(context.RequestServices.GetRequiredService(handlerType) is IFileAuthorizeHandler handler))
+            {
+                throw new Exception($"the required file authorization handler of '{handlerScheme}' is not found ");
+            }
 
-
+            var requestFilePath = GetRequestFilePath(path, handlerScheme);
+            var result = await handler.AuthorizeAsync(context, requestFilePath);
 
             if (!result.Succeeded)
             {
@@ -45,28 +64,103 @@ namespace FileAuthorization
                 return;
             }
 
-            using (var stream=)
+            if (string.IsNullOrWhiteSpace(Service.Options.Value.FileRootPath))
             {
-
+                throw new Exception("file root path is not spicificated");
             }
 
+            var fullName = Path.Combine(Service.Options.Value.FileRootPath, result.RelativePath);
+
+            var fileInfo = new FileInfo(fullName);
+            if (!fileInfo.Exists)
+            {
+                context.Response.StatusCode = 404;
+                return;
+            }
+
+            await WriteFileAsync(context, result, fileInfo);
 
         }
 
-        private static string GetRequestFilePath(string path, string scheme)
+        private string GetRequestFilePath(string path, string scheme)
         {
-
-            return path.Remove(0, path.Length + scheme.Length + 1);
+            return path.Remove(0, Service.Options.Value.AuthorizationScheme.Length + scheme.Length + 1);
         }
 
         private bool BelongToMe(string path)
         {
-            return path.StartsWith(_pathBase);
+            return path.StartsWith(Service.Options.Value.AuthorizationScheme, true, CultureInfo.CurrentCulture);
         }
 
-        private string GetScheme(string path)
+        private string GetHandlerScheme(string path)
         {
             return path.Split('/')[1];
+        }
+
+        private async Task WriteFileAsync(HttpContext context, FileAuthorizeResult result, FileInfo fileInfo)
+        {
+
+
+
+            var response = context.Response;
+
+            response.ContentType = GetContentType(fileInfo);
+            SetContentDispositionHeader(context, result);
+            var heders = response.GetTypedHeaders();
+
+            heders.LastModified = fileInfo.LastWriteTimeUtc;
+            var sendFile = response.HttpContext.Features.Get<IHttpSendFileFeature>();
+            if (sendFile != null)
+            {
+                await sendFile.SendFileAsync(fileInfo.FullName, 0L, null, default(CancellationToken));
+                return;
+            }
+
+            var outputStream = context.Response.Body;
+            using (var fileStream = new FileStream(
+                    fileInfo.FullName,
+                    FileMode.Open,
+                    FileAccess.Read,
+                    FileShare.ReadWrite,
+                    BufferSize,
+                    FileOptions.Asynchronous | FileOptions.SequentialScan))
+            {
+                try
+                {
+
+                    await StreamCopyOperation.CopyToAsync(fileStream, outputStream, count: null, bufferSize: BufferSize, cancel: context.RequestAborted);
+
+                }
+                catch (OperationCanceledException)
+                {
+                    // Don't throw this exception, it's most likely caused by the client disconnecting.
+                    // However, if it was cancelled for any other reason we need to prevent empty responses.
+                    context.Abort();
+                }
+            }
+
+        }
+
+        private void SetContentDispositionHeader(HttpContext context, FileAuthorizeResult result)
+        {
+            if (!string.IsNullOrEmpty(result.FileDownloadName))
+            {
+                // From RFC 2183, Sec. 2.3:
+                // The sender may want to suggest a filename to be used if the entity is
+                // detached and stored in a separate file. If the receiving MUA writes
+                // the entity to a file, the suggested filename should be used as a
+                // basis for the actual filename, where possible.
+                var contentDisposition = new ContentDispositionHeaderValue("attachment")
+                {
+                    FileName = result.FileDownloadName
+                };
+                context.Response.Headers["Content-Disposition"] = contentDisposition.ToString();
+            }
+        }
+
+        private string GetContentType(FileInfo fileInfo)
+        {
+            return MimeTypes.GetMimeType(fileInfo.Extension);
         }
     }
 }

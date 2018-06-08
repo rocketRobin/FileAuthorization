@@ -3,8 +3,8 @@ using System.Threading.Tasks;
 
 namespace FileAuthorization.Abstractions
 {
-    public interface IFileAuthenticationHandler
+    public interface IFileAuthorizeHandler
     {
-        Task<AuthenticateResult> AuthenticateAsync(HttpContext context,string path);
+        Task<FileAuthorizeResult> AuthorizeAsync(HttpContext context,string path);
     }
 }

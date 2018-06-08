@@ -2,11 +2,18 @@
 
 namespace FileAuthorization.Abstractions
 {
-    public class AuthenticateResult
+    public class FileAuthorizeResult
     {
+        public FileAuthorizeResult(bool succeeded,string relativePath,string fileDownloadName,Exception failure=null)
+        {
+            Succeeded = succeeded;
+            RelativePath = relativePath;
+            FileDownloadName = fileDownloadName;
+            Failure = failure;
+        }
         public bool Succeeded { get; }
-        public string Path { get; }
-        public bool None { get; }
+        public string RelativePath { get; }
+        public string FileDownloadName { get; set; }
         public Exception Failure { get; }
     }
 }
