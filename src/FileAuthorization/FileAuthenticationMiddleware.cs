@@ -47,7 +47,7 @@ namespace FileAuthorization
                 return;
             }
 
-            var handlerType = await _service.Provider.GetHandlerAsync(context, handlerScheme);
+            var handlerType =   _service.Provider.GetHandlerType( handlerScheme);
 
 
             if (!(context.RequestServices.GetRequiredService(handlerType) is IFileAuthorizeHandler handler))

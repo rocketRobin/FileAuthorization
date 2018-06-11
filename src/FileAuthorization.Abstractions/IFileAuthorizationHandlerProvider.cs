@@ -8,12 +8,11 @@ namespace FileAuthorization.Abstractions
     {
 
         /// <summary>
-        /// Returns the handler instance that will be used.
+        /// Returns the handler type that will be used.
         /// </summary>
-        /// <param name="context">the http context.</param>
         /// <param name="scheme"> </param>
         /// <returns>The handler instance.</returns>
-        Task<Type> GetHandlerAsync(HttpContext context, string scheme);
+        Type GetHandlerType (string scheme);
 
         bool Exist(string scheme);
     }
