@@ -22,11 +22,11 @@ namespace FileAuthorization
         public FileAuthenticationMiddleware(RequestDelegate next, IFileAuthorizationService service, ILogger<FileAuthenticationMiddleware> logger)
         {
             _next = next ?? throw new ArgumentNullException(nameof(next));
-            Service = service;
+            _service = service;
             _logger = logger;
         }
 
-        public IFileAuthorizationService Service { get; }
+        private readonly IFileAuthorizationService _service;
         public int BufferSize = 64 * 1024;
 
         public async Task Invoke(HttpContext context)
@@ -40,14 +40,14 @@ namespace FileAuthorization
             }
 
             var handlerScheme = GetHandlerScheme(path);
-
-
-            var handlerType = await Service.Provider.GetHandlerAsync(context, handlerScheme);
-
-            if (!Service.Provider.Exist(handlerScheme))
+            if (handlerScheme == null || !_service.Provider.Exist(handlerScheme))
             {
+                _logger.LogInformation($"request handler scheme is not found. request path is: {path}");
+                NotFound(context);
                 return;
             }
+
+            var handlerType = await _service.Provider.GetHandlerAsync(context, handlerScheme);
 
 
             if (!(context.RequestServices.GetRequiredService(handlerType) is IFileAuthorizeHandler handler))
@@ -60,48 +60,63 @@ namespace FileAuthorization
 
             if (!result.Succeeded)
             {
-                context.Response.StatusCode = 403;
+                _logger.LogInformation($"request file is forbidden. request path is: {path}");
+                Forbidden(context);
                 return;
             }
 
-            if (string.IsNullOrWhiteSpace(Service.Options.Value.FileRootPath))
+            if (string.IsNullOrWhiteSpace(_service.Options.Value.FileRootPath))
             {
                 throw new Exception("file root path is not spicificated");
             }
 
-            var fullName = Path.Combine(Service.Options.Value.FileRootPath, result.RelativePath);
+            string fullName;
+
+            if (Path.IsPathRooted(result.RelativePath))
+            {
+                fullName = result.RelativePath;
+            }
+            else
+            {
+                fullName = Path.Combine(_service.Options.Value.FileRootPath, result.RelativePath);
+            }
+
 
             var fileInfo = new FileInfo(fullName);
+
             if (!fileInfo.Exists)
             {
-                context.Response.StatusCode = 404;
+                NotFound(context);
                 return;
             }
 
-            await WriteFileAsync(context, result, fileInfo);
+            _logger.LogInformation($"{context.User.Identity.Name} request file :{fileInfo.FullName} has beeb authorized. File sending");
+            await SetResponseHeadersAndWriteFileAsync(context, result, fileInfo);
 
         }
 
         private string GetRequestFilePath(string path, string scheme)
         {
-            return path.Remove(0, Service.Options.Value.AuthorizationScheme.Length + scheme.Length + 1);
+            return path.Remove(0, _service.Options.Value.AuthorizationScheme.Length + scheme.Length + 1);
         }
 
         private bool BelongToMe(string path)
         {
-            return path.StartsWith(Service.Options.Value.AuthorizationScheme, true, CultureInfo.CurrentCulture);
+            return path.StartsWith(_service.Options.Value.AuthorizationScheme, true, CultureInfo.CurrentCulture);
         }
 
         private string GetHandlerScheme(string path)
         {
-            return path.Split('/')[1];
+            var arr = path.Split('/');
+            if (arr.Length < 2)
+            {
+                return null;
+            }
+            return arr[1];
         }
 
-        private async Task WriteFileAsync(HttpContext context, FileAuthorizeResult result, FileInfo fileInfo)
+        private async Task SetResponseHeadersAndWriteFileAsync(HttpContext context, FileAuthorizeResult result, FileInfo fileInfo)
         {
-
-
-
             var response = context.Response;
 
             response.ContentType = GetContentType(fileInfo);
@@ -157,6 +172,21 @@ namespace FileAuthorization
                 context.Response.Headers["Content-Disposition"] = contentDisposition.ToString();
             }
         }
+
+        private void NotFound(HttpContext context)
+        {
+            HttpCode(context, 404);
+        }
+        private void Forbidden(HttpContext context)
+        {
+            HttpCode(context, 403);
+        }
+
+        private void HttpCode(HttpContext context, int code)
+        {
+            context.Response.StatusCode = code;
+        }
+
 
         private string GetContentType(FileInfo fileInfo)
         {
