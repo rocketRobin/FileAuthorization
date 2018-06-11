@@ -31,7 +31,8 @@ namespace FileAuthorization
 
         public async Task Invoke(HttpContext context)
         {
-            var path = context.Request.Path.Value.Remove(0, 1);
+            // trim the start slash
+            var path = context.Request.Path.Value.TrimStart('/');
 
             if (!BelongToMe(path))
             {
@@ -55,7 +56,8 @@ namespace FileAuthorization
                 throw new Exception($"the required file authorization handler of '{handlerScheme}' is not found ");
             }
 
-            var requestFilePath = GetRequestFilePath(path, handlerScheme);
+            // start with slash
+            var requestFilePath = GetRequestFileUri(path, handlerScheme);
             var result = await handler.AuthorizeAsync(context, requestFilePath);
 
             if (!result.Succeeded)
@@ -93,7 +95,7 @@ namespace FileAuthorization
 
         }
 
-        private string GetRequestFilePath(string path, string scheme)
+        private string GetRequestFileUri(string path, string scheme)
         {
             return path.Remove(0, _service.Options.Value.AuthorizationScheme.Length + scheme.Length + 1);
         }

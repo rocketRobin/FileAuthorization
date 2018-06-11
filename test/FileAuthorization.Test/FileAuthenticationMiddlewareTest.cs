@@ -54,6 +54,53 @@ namespace FileAuthorization.Test
             var response = await server.CreateClient().GetAsync("http://example.com/file/id-card/front.jpg");
             Assert.Equal(200, (int)response.StatusCode);
         }
+        [Fact]
+        public async Task NotFoundTest()
+        {
+            var builder = new WebHostBuilder()
+             .Configure(app =>
+             {
+                 app.UseFileAuthorization();
+             })
+             .ConfigureServices(services =>
+             {
+                 services.AddFileAuthorization(options =>
+                 {
+                     options.AuthorizationScheme = "file";
+                     options.FileRootPath = CreateFileRootPath();
+                 })
+                 .AddHandler<TestHandler>("id-card");
+             });
+
+            var server = new TestServer(builder);
+            var response = await server.CreateClient().GetAsync("http://example.com/file/id-card/back.jpg");
+            Assert.Equal(404, (int)response.StatusCode);
+        }
+
+
+        [Fact]
+        public async Task SchemeNotInProviderTest()
+        {
+            var builder = new WebHostBuilder()
+             .Configure(app =>
+             {
+                 app.UseFileAuthorization();
+             })
+             .ConfigureServices(services =>
+             {
+                 services.AddFileAuthorization(options =>
+                 {
+                     options.AuthorizationScheme = "file";
+                     options.FileRootPath = CreateFileRootPath();
+                 })
+                 .AddHandler<TestHandler>("contract");
+             });
+
+            var server = new TestServer(builder);
+            var response = await server.CreateClient().GetAsync("http://example.com/file/contract/a.docx");
+            Assert.Equal(404, (int)response.StatusCode);
+        }
+
 
         private string CreateFileRootPath()
         {

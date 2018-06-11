@@ -12,6 +12,12 @@ namespace FileAuthorization.Abstractions
             Failure = failure;
         }
         public bool Succeeded { get; }
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <remarks>
+        /// strart with out slash
+        /// </remarks>
         public string RelativePath { get; }
         public string FileDownloadName { get; set; }
         public Exception Failure { get; }
