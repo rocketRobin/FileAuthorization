@@ -80,8 +80,6 @@ namespace FileAuthorization
             {
                 fullName = Path.Combine(_service.Options.Value.FileRootPath, result.RelativePath);
             }
-
-
             var fileInfo = new FileInfo(fullName);
 
             if (!fileInfo.Exists)

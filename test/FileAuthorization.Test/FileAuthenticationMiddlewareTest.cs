@@ -6,12 +6,13 @@ using FileAuthorization;
 using FileAuthorization.Abstractions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.TestHost;
+using System.IO;
 
 namespace FileAuthorization.Test
 {
     public class TestHandler : IFileAuthorizeHandler
     {
-        public const string TestScheme = "id-card";
+        public const string TestHandlerScheme = "id-card";
 
         public Task<FileAuthorizeResult> AuthorizeAsync(HttpContext context, string path)
         {
@@ -21,7 +22,7 @@ namespace FileAuthorization.Test
         public string GetRelativeFilePath(string path)
         {
             path = path.TrimStart('/', '\\').Replace('/', '\\');
-            return $"{TestScheme}\\{path}";
+            return $"{TestHandlerScheme}\\{path}";
         }
 
         public string GetDownloadFileName(string path)
@@ -44,7 +45,7 @@ namespace FileAuthorization.Test
                     services.AddFileAuthorization(options =>
                     {
                         options.AuthorizationScheme = "file";
-                        options.FileRootPath = @"D:\test\";
+                        options.FileRootPath = CreateFileRootPath();
                     })
                     .AddHandler<TestHandler>("id-card");
                 });
@@ -52,6 +53,14 @@ namespace FileAuthorization.Test
             var server = new TestServer(builder);
             var response = await server.CreateClient().GetAsync("http://example.com/file/id-card/front.jpg");
             Assert.Equal(200, (int)response.StatusCode);
+        }
+
+        private string CreateFileRootPath()
+        {
+            var root = AppDomain.CurrentDomain.BaseDirectory;
+            var index = root.IndexOf("bin");
+            root = root.Remove(index);
+            return Path.Combine(root, "Resource");
         }
 
 
