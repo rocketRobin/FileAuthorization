@@ -10,7 +10,7 @@
     <PackageReference Include="Microsoft.AspNetCore.Http.Extensions" Version="2.1.0" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="2.1.0" />
     <PackageReference Include="Microsoft.Extensions.Options" Version="2.1.0" />
-    <PackageReference Include="Myrmec" Version="1.1.0" />
+    <PackageReference Include="Myrmec.Mime" Version="1.2.0" />
   </ItemGroup>
 
   <ItemGroup>

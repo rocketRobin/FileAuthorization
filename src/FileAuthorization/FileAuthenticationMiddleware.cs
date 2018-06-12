@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Http.Features;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Myrmec;
+using Myrmec.Mime;
 using System;
 using System.Globalization;
 using System.IO;
@@ -49,7 +50,7 @@ namespace FileAuthorization
                 return;
             }
 
-            if (string.IsNullOrWhiteSpace(_service.Options.Value.FileRootPath))
+            if (string.IsNullOrWhiteSpace(_service.Options.FileRootPath))
             {
                 throw new Exception("file root path is not spicificated");
             }
@@ -62,7 +63,7 @@ namespace FileAuthorization
             }
             else
             {
-                fullName = Path.Combine(_service.Options.Value.FileRootPath, result.RelativePath);
+                fullName = Path.Combine(_service.Options.FileRootPath, result.RelativePath);
             }
             var fileInfo = new FileInfo(fullName);
 
@@ -82,7 +83,7 @@ namespace FileAuthorization
 
         private bool BelongToMe(string path)
         {
-            return path.StartsWith(_service.Options.Value.AuthorizationScheme, true, CultureInfo.CurrentCulture);
+            return path.StartsWith(_service.Options.AuthorizationScheme, true, CultureInfo.CurrentCulture);
         }
 
 
@@ -169,7 +170,7 @@ namespace FileAuthorization
 
         private string GetContentType(FileInfo fileInfo)
         {
-            return MimeTypes.GetMimeType(fileInfo.Extension);
+            return fileInfo.Extension.MimeType();
         }
     }
 }

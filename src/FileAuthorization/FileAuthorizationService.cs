@@ -4,8 +4,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace FileAuthorization
@@ -16,12 +14,12 @@ namespace FileAuthorization
 
         public FileAuthorizationService(IOptions<FileAuthorizationOptions> options, IFileAuthorizationHandlerProvider provider, ILogger<FileAuthorizationService> logger)
         {
-            Options = options;
+            Options = options.Value;
             Provider = provider;
             _logger = logger;
         }
 
-        public IOptions<FileAuthorizationOptions> Options { get; }
+        public FileAuthorizationOptions  Options { get; }
         public IFileAuthorizationHandlerProvider Provider { get; }
 
         public async Task<FileAuthorizeResult> AuthorizeAsync(HttpContext context, string path)
@@ -58,7 +56,7 @@ namespace FileAuthorization
 
         private string GetRequestFileUri(string path, string scheme)
         {
-            return path.Remove(0,  Options.Value.AuthorizationScheme.Length + scheme.Length + 1);
+            return path.Remove(0, Options.AuthorizationScheme.Length + scheme.Length + 1);
         }
     }
 }

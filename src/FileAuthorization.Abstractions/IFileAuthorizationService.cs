@@ -6,7 +6,7 @@ namespace FileAuthorization.Abstractions
 {
     public interface IFileAuthorizationService
     {
-        IOptions<FileAuthorizationOptions> Options { get; }
+        FileAuthorizationOptions  Options { get; }
         IFileAuthorizationHandlerProvider Provider { get; }
         Task<FileAuthorizeResult> AuthorizeAsync(HttpContext context, string path);
     }

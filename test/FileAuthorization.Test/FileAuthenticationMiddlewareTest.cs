@@ -52,6 +52,7 @@ namespace FileAuthorization.Test
             var server = new TestServer(builder);
             var response = await server.CreateClient().GetAsync("http://example.com/file/id-card/front.jpg");
             Assert.Equal(200, (int)response.StatusCode);
+            Assert.Equal("image/jpeg", response.Content.Headers.ContentType.MediaType);
         }
         [Fact]
         public async Task NotFoundTest()

@@ -11,7 +11,7 @@ namespace FileAuthorization
 {
     public class FileAuthorizationHandlerProvider : IFileAuthorizationHandlerProvider
     {
-        private readonly IOptions<FileAuthorizationOptions> _options;
+        private readonly  FileAuthorizationOptions  _options;
 
         /// <summary>
         /// Initialize <see cref="FileAuthorizationHandlerProvider"/>
@@ -19,7 +19,7 @@ namespace FileAuthorization
         /// <param name="options"></param>
         public FileAuthorizationHandlerProvider(IOptions<FileAuthorizationOptions> options)
         {
-            _options = options;
+            _options = options.Value;
         }
 
         /// <summary>
@@ -29,7 +29,7 @@ namespace FileAuthorization
         /// <returns></returns>
         public bool Exist(string scheme)
         {
-            return _options.Value.Schemes.Any(c => c.Name == scheme);
+            return _options.Schemes.Any(c => c.Name == scheme);
         }
 
         /// <summary>
@@ -40,7 +40,7 @@ namespace FileAuthorization
         /// <returns></returns>
         public Type GetHandlerType(string scheme)
         {
-            return _options.Value.GetHandlerType(scheme);
+            return _options.GetHandlerType(scheme);
         }
     }
 }
