@@ -51,6 +51,8 @@ namespace FileAuthorization
             {
                 return null;
             }
+
+            // arr[0] is the Options.AuthorizationScheme
             return arr[1];
         }
 

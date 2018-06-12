@@ -12,13 +12,19 @@ namespace FileAuthorization.Abstractions
             Failure = failure;
         }
         public bool Succeeded { get; }
+
+
         /// <summary>
-        /// 
+        /// File path relative to <see cref="FileAuthorizationOptions.FileRootPath"/> (including file name).
         /// </summary>
         /// <remarks>
         /// strart with out slash
         /// </remarks>
         public string RelativePath { get; }
+
+        /// <summary>
+        /// File name downloaded to the client.
+        /// </summary>
         public string FileDownloadName { get; set; }
         public Exception Failure { get; }
 
