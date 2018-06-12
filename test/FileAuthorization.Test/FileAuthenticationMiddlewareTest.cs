@@ -2,7 +2,6 @@ using Microsoft.AspNetCore.Hosting;
 using System;
 using System.Threading.Tasks;
 using Xunit;
-using FileAuthorization;
 using FileAuthorization.Abstractions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.TestHost;
@@ -16,7 +15,7 @@ namespace FileAuthorization.Test
 
         public Task<FileAuthorizeResult> AuthorizeAsync(HttpContext context, string path)
         {
-            return Task.FromResult(new FileAuthorizeResult(true, GetRelativeFilePath(path), GetDownloadFileName(path)));
+            return Task.FromResult(FileAuthorizeResult.Success(GetRelativeFilePath(path), GetDownloadFileName(path)));
         }
 
         public string GetRelativeFilePath(string path)

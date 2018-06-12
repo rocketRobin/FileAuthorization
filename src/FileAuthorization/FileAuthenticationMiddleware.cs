@@ -40,25 +40,7 @@ namespace FileAuthorization
                 return;
             }
 
-            var handlerScheme = GetHandlerScheme(path);
-            if (handlerScheme == null || !_service.Provider.Exist(handlerScheme))
-            {
-                _logger.LogInformation($"request handler scheme is not found. request path is: {path}");
-                NotFound(context);
-                return;
-            }
-
-            var handlerType =   _service.Provider.GetHandlerType( handlerScheme);
-
-
-            if (!(context.RequestServices.GetRequiredService(handlerType) is IFileAuthorizeHandler handler))
-            {
-                throw new Exception($"the required file authorization handler of '{handlerScheme}' is not found ");
-            }
-
-            // start with slash
-            var requestFilePath = GetRequestFileUri(path, handlerScheme);
-            var result = await handler.AuthorizeAsync(context, requestFilePath);
+            var result = await _service.AuthorizeAsync(context, path);
 
             if (!result.Succeeded)
             {
@@ -91,39 +73,24 @@ namespace FileAuthorization
             }
 
             _logger.LogInformation($"{context.User.Identity.Name} request file :{fileInfo.FullName} has beeb authorized. File sending");
-            await SetResponseHeadersAndWriteFileAsync(context, result, fileInfo);
+            SetResponseHeaders(context, result, fileInfo);
+            await WriteFileAsync(context, result, fileInfo);
 
         }
 
-        private string GetRequestFileUri(string path, string scheme)
-        {
-            return path.Remove(0, _service.Options.Value.AuthorizationScheme.Length + scheme.Length + 1);
-        }
+
 
         private bool BelongToMe(string path)
         {
             return path.StartsWith(_service.Options.Value.AuthorizationScheme, true, CultureInfo.CurrentCulture);
         }
 
-        private string GetHandlerScheme(string path)
-        {
-            var arr = path.Split('/');
-            if (arr.Length < 2)
-            {
-                return null;
-            }
-            return arr[1];
-        }
 
-        private async Task SetResponseHeadersAndWriteFileAsync(HttpContext context, FileAuthorizeResult result, FileInfo fileInfo)
+
+        private async Task WriteFileAsync(HttpContext context, FileAuthorizeResult result, FileInfo fileInfo)
         {
+
             var response = context.Response;
-
-            response.ContentType = GetContentType(fileInfo);
-            SetContentDispositionHeader(context, result);
-            var heders = response.GetTypedHeaders();
-
-            heders.LastModified = fileInfo.LastWriteTimeUtc;
             var sendFile = response.HttpContext.Features.Get<IHttpSendFileFeature>();
             if (sendFile != null)
             {
@@ -154,6 +121,18 @@ namespace FileAuthorization
                 }
             }
 
+        }
+
+        private  void  SetResponseHeaders(HttpContext context, FileAuthorizeResult result, FileInfo fileInfo)
+        {
+            var response = context.Response;
+
+            response.ContentType = GetContentType(fileInfo);
+            SetContentDispositionHeader(context, result);
+            var heders = response.GetTypedHeaders();
+
+            heders.LastModified = fileInfo.LastWriteTimeUtc;
+          
         }
 
         private void SetContentDispositionHeader(HttpContext context, FileAuthorizeResult result)

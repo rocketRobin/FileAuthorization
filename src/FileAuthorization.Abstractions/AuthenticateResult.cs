@@ -4,7 +4,7 @@ namespace FileAuthorization.Abstractions
 {
     public class FileAuthorizeResult
     {
-        public FileAuthorizeResult(bool succeeded,string relativePath,string fileDownloadName,Exception failure=null)
+        private FileAuthorizeResult(bool succeeded, string relativePath, string fileDownloadName, Exception failure = null)
         {
             Succeeded = succeeded;
             RelativePath = relativePath;
@@ -21,5 +21,15 @@ namespace FileAuthorization.Abstractions
         public string RelativePath { get; }
         public string FileDownloadName { get; set; }
         public Exception Failure { get; }
+
+        public static FileAuthorizeResult Success(string relativePath, string fileDownloadName)
+        {
+            return new FileAuthorizeResult(true, relativePath, fileDownloadName, null);
+        }
+        public static FileAuthorizeResult Fail(Exception failure = null)
+        {
+            return new FileAuthorizeResult(false, null, null, failure);
+        }
+
     }
 }
