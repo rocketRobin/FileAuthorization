@@ -1,13 +1,15 @@
 ﻿using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Options;
 using System.Threading.Tasks;
 
 namespace FileAuthorization.Abstractions
 {
     public interface IFileAuthorizationService
     {
-        FileAuthorizationOptions  Options { get; }
-        IFileAuthorizationHandlerProvider Provider { get; }
+        string AuthorizationScheme { get; }
+        string FileRootPath { get; }
+        
+        //IFileAuthorizationHandlerProvider Provider { get; }
+
         /// <summary>
         /// Authorizing the requested URI.
         /// </summary>

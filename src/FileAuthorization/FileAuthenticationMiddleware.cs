@@ -50,7 +50,7 @@ namespace FileAuthorization
                 return;
             }
 
-            if (string.IsNullOrWhiteSpace(_service.Options.FileRootPath))
+            if (string.IsNullOrWhiteSpace(_service.FileRootPath))
             {
                 throw new Exception("file root path is not spicificated");
             }
@@ -63,7 +63,7 @@ namespace FileAuthorization
             }
             else
             {
-                fullName = Path.Combine(_service.Options.FileRootPath, result.RelativePath);
+                fullName = Path.Combine(_service.FileRootPath, result.RelativePath);
             }
             var fileInfo = new FileInfo(fullName);
 
@@ -83,7 +83,7 @@ namespace FileAuthorization
 
         private bool BelongToMe(string path)
         {
-            return path.StartsWith(_service.Options.AuthorizationScheme, true, CultureInfo.CurrentCulture);
+            return path.StartsWith(_service.AuthorizationScheme, true, CultureInfo.CurrentCulture);
         }
 
 
@@ -99,7 +99,7 @@ namespace FileAuthorization
                 return;
             }
 
-            var outputStream = context.Response.Body;
+          
             using (var fileStream = new FileStream(
                     fileInfo.FullName,
                     FileMode.Open,
@@ -111,7 +111,7 @@ namespace FileAuthorization
                 try
                 {
 
-                    await StreamCopyOperation.CopyToAsync(fileStream, outputStream, count: null, bufferSize: BufferSize, cancel: context.RequestAborted);
+                    await StreamCopyOperation.CopyToAsync(fileStream, context.Response.Body, count: null, bufferSize: BufferSize, cancel: context.RequestAborted);
 
                 }
                 catch (OperationCanceledException)

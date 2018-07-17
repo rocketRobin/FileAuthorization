@@ -2,6 +2,12 @@
 
   <PropertyGroup>
     <TargetFramework>netcoreapp2.0</TargetFramework>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <Description>this is a asp.net core middleware that used to authorize the requests for the "non-public" files.</Description>
+    <PackageProjectUrl>https://github.com/rocketRobin/FileAuthorization</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/rocketRobin/FileAuthorization</RepositoryUrl>
+    <PackageLicenseUrl>https://github.com/rocketRobin/FileAuthorization/blob/master/LICENSE</PackageLicenseUrl>
+    <PackageReleaseNotes>this is a asp.net core middleware that used to authorize the requests for the "non-public" files.</PackageReleaseNotes>
   </PropertyGroup>
 
   <ItemGroup>

@@ -22,6 +22,10 @@ namespace FileAuthorization
         public FileAuthorizationOptions  Options { get; }
         public IFileAuthorizationHandlerProvider Provider { get; }
 
+        public string AuthorizationScheme => Options.AuthorizationScheme;
+
+        public string FileRootPath => Options.FileRootPath;
+
         public async Task<FileAuthorizeResult> AuthorizeAsync(HttpContext context, string path)
         {
             var handlerScheme = GetHandlerScheme(path);
